@@ -8,6 +8,7 @@ using System.Data.Entity;
 using ComicBookLibraryManagerWebApp.ViewModels;
 using System.Net;
 using System.Data.Entity.Infrastructure;
+using ComicBookShared.Data;
 
 namespace ComicBookLibraryManagerWebApp.Controllers
 {
@@ -16,11 +17,22 @@ namespace ComicBookLibraryManagerWebApp.Controllers
     /// </summary>
     public class ComicBooksController : Controller
     {
+        private Context _context = null;
+
+        public ComicBooksController()
+        {
+            _context = new Context();
+        }
+
         public ActionResult Index()
         {
             // TODO Get the comic books list.
             // Include the "Series" navigation property.
-            var comicBooks = new List<ComicBook>();
+            var comicBooks = _context.ComicBooks
+                .Include(cb => cb.Series)
+                .OrderBy(cb => cb.Series.Title)
+                .ThenBy(cb => cb.IssueNumber)
+                .ToList();
 
             return View(comicBooks);
         }
@@ -34,7 +46,12 @@ namespace ComicBookLibraryManagerWebApp.Controllers
 
             // TODO Get the comic book.
             // Include the "Series", "Artists.Artist", and "Artists.Role" navigation properties.
-            var comicBook = new ComicBook();
+            var comicBook = _context.ComicBooks
+                    .Include(cb => cb.Series)
+                    .Include(cb => cb.Artists.Select(a => a.Artist))
+                    .Include(cb => cb.Artists.Select(a => a.Role))
+                    .Where(cb => cb.Id == id)
+                    .SingleOrDefault();
 
             if (comicBook == null)
             {
@@ -52,7 +69,7 @@ namespace ComicBookLibraryManagerWebApp.Controllers
             var viewModel = new ComicBooksAddViewModel();
 
             // TODO Pass the Context class to the view model "Init" method.
-            viewModel.Init();
+            viewModel.Init(_context);
 
             return View(viewModel);
         }
@@ -75,7 +92,7 @@ namespace ComicBookLibraryManagerWebApp.Controllers
             }
 
             // TODO Pass the Context class to the view model "Init" method.
-            viewModel.Init();
+            viewModel.Init(_context);
 
             return View(viewModel);
         }
@@ -99,7 +116,7 @@ namespace ComicBookLibraryManagerWebApp.Controllers
             {
                 ComicBook = comicBook
             };
-            viewModel.Init();
+            viewModel.Init(_context);
 
             return View(viewModel);
         }
@@ -120,7 +137,7 @@ namespace ComicBookLibraryManagerWebApp.Controllers
                 return RedirectToAction("Detail", new { id = comicBook.Id });
             }
 
-            viewModel.Init();
+            viewModel.Init(_context);
 
             return View(viewModel);
         }
@@ -173,6 +190,25 @@ namespace ComicBookLibraryManagerWebApp.Controllers
             //            "The provided Issue Number has already been entered for the selected Series.");
             //    }
             //}
+        }
+
+        private bool _disposed = false;
+
+        protected override void Dispose(bool disposing)
+        {
+            if (_disposed)
+            {
+                return;
+            }
+
+            if (disposing)
+            {
+                _context.Dispose();
+            }
+
+            _disposed = true;
+
+            base.Dispose(disposing);
         }
     }
 }
