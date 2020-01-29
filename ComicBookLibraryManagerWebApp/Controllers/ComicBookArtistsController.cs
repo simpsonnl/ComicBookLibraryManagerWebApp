@@ -20,10 +20,7 @@ namespace ComicBookLibraryManagerWebApp.Controllers
         {
             // TODO Get the comic book.
             // Include the "Series" navigation property.
-            var comicBook = Context.ComicBooks
-                .Include(cb => cb.Series)
-                .Where(cb => cb.Id == comicBookId)
-                .SingleOrDefault();
+            var comicBook = Repository.GetComicBookDetailById(comicBookId);
 
             if (comicBook == null)
             {
@@ -36,7 +33,7 @@ namespace ComicBookLibraryManagerWebApp.Controllers
             };
 
             // TODO Pass the Context class to the view model "Init" method.
-            viewModel.Init(Context);
+            viewModel.Init(Repository);
 
             return View(viewModel);
         }
@@ -55,8 +52,7 @@ namespace ComicBookLibraryManagerWebApp.Controllers
                     RoleId = viewModel.RoleId,
                     ArtistId = viewModel.ArtistId
                 };
-                Context.ComicBookArtists.Add(comicBookArtist);
-                Context.SaveChanges();
+                Repository.AddComicBookArtist(comicBookArtist);
 
                 TempData["Message"] = "Your artist was successfully added!";
 
@@ -66,12 +62,9 @@ namespace ComicBookLibraryManagerWebApp.Controllers
             // Prepare the view model for the view.
             // Get the comic book.
             // Include the "Series" navigation property.
-            viewModel.ComicBook = Context.ComicBooks
-                .Include(cb => cb.Series)
-                .Where(cb => cb.Id == viewModel.ComicBookId)
-                .SingleOrDefault();
+            viewModel.ComicBook = Repository.GetComicBookDetailById(viewModel.ComicBookId);
             // Pass the Context class to the view model "Init" method.
-            viewModel.Init(Context);
+            viewModel.Init(Repository);
 
             return View(viewModel);
         }
@@ -85,12 +78,7 @@ namespace ComicBookLibraryManagerWebApp.Controllers
 
             // Get the comic book artist.
             // Include the "ComicBook.Series", "Artist", and "Role" navigation properties.
-            var comicBookArtist = Context.ComicBookArtists
-                .Include(a => a.ComicBook.Series)
-                .Include(a => a.Artist)
-                .Include(a => a.Role)
-                .Where(a => a.Id == (int)id)
-                .SingleOrDefault();
+            var comicBookArtist = Repository.GetComicBookArtistById((int)id);
 
             if (comicBookArtist == null)
             {
@@ -105,8 +93,7 @@ namespace ComicBookLibraryManagerWebApp.Controllers
         {
             // Delete the comic book artist.
             var comicBookArtist = new ComicBookArtist() { Id = id };
-            Context.Entry(comicBookArtist).State = EntityState.Deleted;
-            Context.SaveChanges();
+            Repository.DeleteComicBookArtist(comicBookArtist);
 
             TempData["Message"] = "Your artist was successfully deleted!";
 
@@ -128,10 +115,7 @@ namespace ComicBookLibraryManagerWebApp.Controllers
                 // doesn't already exist for this comic book.
                 // Call method to check if this artist and role combination
                 // already exists for this comic book.
-                if (Context.ComicBookArtists
-                        .Any(cba => cba.ComicBookId == viewModel.ComicBookId &&
-                                cba.ArtistId == viewModel.ArtistId &&
-                                cba.RoleId == viewModel.RoleId))
+                if (Repository.ComicBookArtistExists(viewModel.ComicBookId, viewModel.ArtistId, viewModel.RoleId))
                 {
                     ModelState.AddModelError("ArtistId",
                         "This artist and role combination already exists for this comic book.");
