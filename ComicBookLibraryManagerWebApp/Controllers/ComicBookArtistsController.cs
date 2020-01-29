@@ -1,4 +1,5 @@
 ﻿using ComicBookLibraryManagerWebApp.ViewModels;
+using ComicBookShared.Data;
 using ComicBookShared.Models;
 using System;
 using System.Collections.Generic;
@@ -15,11 +16,20 @@ namespace ComicBookLibraryManagerWebApp.Controllers
     /// </summary>
     public class ComicBookArtistsController : Controller
     {
+        private Context _context = null;
+
+        public ComicBookArtistsController()
+        {
+            _context = new Context();
+        }
         public ActionResult Add(int comicBookId)
         {
             // TODO Get the comic book.
             // Include the "Series" navigation property.
-            var comicBook = new ComicBook();
+            var comicBook = _context.ComicBooks
+                .Include(cb => cb.Series)
+                .Where(cb => cb.Id == comicBookId)
+                .SingleOrDefault();
 
             if (comicBook == null)
             {
@@ -32,7 +42,7 @@ namespace ComicBookLibraryManagerWebApp.Controllers
             };
 
             // TODO Pass the Context class to the view model "Init" method.
-            viewModel.Init();
+            viewModel.Init(_context);
 
             return View(viewModel);
         }
@@ -45,6 +55,7 @@ namespace ComicBookLibraryManagerWebApp.Controllers
             if (ModelState.IsValid)
             {
                 // TODO Add the comic book artist.
+                
 
                 TempData["Message"] = "Your artist was successfully added!";
 
@@ -56,7 +67,7 @@ namespace ComicBookLibraryManagerWebApp.Controllers
             // Include the "Series" navigation property.
             viewModel.ComicBook = new ComicBook();
             // TODO Pass the Context class to the view model "Init" method.
-            viewModel.Init();
+            viewModel.Init(_context);
 
             return View(viewModel);
         }

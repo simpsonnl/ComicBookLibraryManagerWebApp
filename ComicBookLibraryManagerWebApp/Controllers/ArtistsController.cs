@@ -1,4 +1,5 @@
-﻿using ComicBookShared.Models;
+﻿using ComicBookShared.Data;
+using ComicBookShared.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,10 +14,17 @@ namespace ComicBookLibraryManagerWebApp.Controllers
     /// </summary>
     public class ArtistsController : Controller
     {
+        private Context _context = null;
+        public ArtistsController()
+        {
+            _context = new Context();
+        }
         public ActionResult Index()
         {
             // TODO Get the artists list.
-            var artists = new List<Artist>();
+            var artists = _context.Artists
+                .OrderBy(a => a.Name)
+                .ToList();
 
             return View(artists);
         }
