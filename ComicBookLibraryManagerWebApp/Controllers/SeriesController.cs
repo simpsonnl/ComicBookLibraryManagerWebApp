@@ -1,4 +1,5 @@
-﻿using ComicBookShared.Models;
+﻿using ComicBookShared.Data;
+using ComicBookShared.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,12 +12,18 @@ namespace ComicBookLibraryManagerWebApp.Controllers
     /// <summary>
     /// Controller for the "Series" section of the website.
     /// </summary>
-    public class SeriesController : Controller
+    public class SeriesController : BaseController
     {
+        private SeriesRepository _seriesRepository = null;
+
+        public SeriesController()
+        {
+            _seriesRepository = new SeriesRepository(Context);
+        }
         public ActionResult Index()
         {
             // TODO Get the series list.
-            var series = new List<Series>();
+            var series = _seriesRepository.GetList();
 
             return View(series);
         }
@@ -29,7 +36,7 @@ namespace ComicBookLibraryManagerWebApp.Controllers
             }
 
             // TODO Get the series.
-            var series = new Series();
+            var series = _seriesRepository.GetDetailById((int)id);
 
             if (series == null)
             {
@@ -59,6 +66,8 @@ namespace ComicBookLibraryManagerWebApp.Controllers
             if (ModelState.IsValid)
             {
                 // TODO Add the series.
+                _seriesRepository.Add(series);
+
 
                 TempData["Message"] = "Your series was successfully added!";
 
@@ -75,8 +84,8 @@ namespace ComicBookLibraryManagerWebApp.Controllers
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
 
-            // TODO Get the series.
-            var series = new Series();
+            // Get the series.
+            var series = _seriesRepository.GetById((int)id);
 
             if (series == null)
             {
@@ -93,7 +102,9 @@ namespace ComicBookLibraryManagerWebApp.Controllers
 
             if (ModelState.IsValid)
             {
-                // TODO Update the series.
+                // Update the series.
+
+                _seriesRepository.Update(series);
 
                 TempData["Message"] = "Your series was successfully updated!";
 
@@ -110,8 +121,8 @@ namespace ComicBookLibraryManagerWebApp.Controllers
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
 
-            // TODO Get the series.
-            var series = new Series();
+            // Get the series.
+            var series = _seriesRepository.GetById((int)id);
 
             if (series == null)
             {
@@ -124,7 +135,8 @@ namespace ComicBookLibraryManagerWebApp.Controllers
         [HttpPost]
         public ActionResult Delete(int id)
         {
-            // TODO Delete the series.
+            // Delete the series.
+            _seriesRepository.Delete(id);
 
             TempData["Message"] = "Your series was successfully deleted!";
 
@@ -138,17 +150,17 @@ namespace ComicBookLibraryManagerWebApp.Controllers
         /// <param name="series">The series to validate.</param>
         private void ValidateSeries(Series series)
         {
-            //// If there aren't any "Title" field validation errors...
-            //if (ModelState.IsValidField("Title"))
-            //{
-            //    // Then make sure that the provided title is unique.
-            //    // TODO Call method to check if the title is available.
-            //    if (false)
-            //    {
-            //        ModelState.AddModelError("Title",
-            //            "The provided Title is in use by another series.");
-            //    }
-            //}
+            // If there aren't any "Title" field validation errors...
+            if (ModelState.IsValidField("Title"))
+            {
+                // Then make sure that the provided title is unique.
+                // TODO Call method to check if the title is available.
+                if (_seriesRepository.SeriesExists(series))
+                {
+                    ModelState.AddModelError("Title",
+                        "The provided Title is in use by another series.");
+                }
+            }
         }
     }
 }

@@ -101,7 +101,7 @@ namespace ComicBookLibraryManagerWebApp.Controllers
         {
             // Delete the comic book artist.
             var comicBookArtist = new ComicBookArtist() { Id = id };
-            _comicBookArtistsRepository.Delete(comicBookArtist);
+            _comicBookArtistsRepository.Delete(comicBookArtist.Id);
 
             TempData["Message"] = "Your artist was successfully deleted!";
 
